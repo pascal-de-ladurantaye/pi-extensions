@@ -14,7 +14,9 @@ Custom extensions for [pi](https://github.com/badlogic/pi-mono), the coding agen
 ./install.sh
 ```
 
-This symlinks every extension folder into all pi agent config directories found in `~/.pi/` (e.g. `~/.pi/agent/extensions/`, `~/.pi/agent-shopify/extensions/`, etc.).
+This symlinks into all pi agent config directories found in `~/.pi/`:
+- **Extensions** — each `*/index.ts` folder → `~/.pi/*/extensions/`
+- **Global AGENTS.md** — `global-agents.md` → `~/.pi/*/AGENTS.md`
 
 Then run `/reload` in pi to pick up the changes.
 
@@ -34,6 +36,8 @@ Each extension is a directory with an `index.ts` entry point:
 pi-extensions/
 ├── install.sh              # Symlink installer
 ├── README.md
+├── AGENTS.md               # Repo-local context (for working in this repo)
+├── global-agents.md        # Global context (symlinked to ~/.pi/*/AGENTS.md)
 ├── bash-guard/
 │   ├── index.ts            # Extension entry point
 │   └── README.md           # Extension documentation

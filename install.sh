@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Install pi extensions by symlinking each extension folder
-# into all pi agent config directories found in ~/.pi/
+# Install pi extensions and global AGENTS.md by symlinking into
+# all pi agent config directories found in ~/.pi/
 #
 # Usage: ./install.sh
 #
@@ -15,7 +15,34 @@ if [[ ! -d "$PI_DIR" ]]; then
   exit 1
 fi
 
-# Find all extension folders (directories containing index.ts)
+installed=0
+
+# ── Symlink global AGENTS.md into each agent profile ──
+
+GLOBAL_AGENTS="$SCRIPT_DIR/global-agents.md"
+if [[ -f "$GLOBAL_AGENTS" ]]; then
+  echo "Global AGENTS.md: $GLOBAL_AGENTS"
+  for agent_dir in "$PI_DIR"/*/; do
+    [[ -d "$agent_dir" ]] || continue
+    agent_name="$(basename "$agent_dir")"
+    target="${agent_dir}AGENTS.md"
+
+    if [[ -L "$target" ]]; then
+      rm "$target"
+    elif [[ -e "$target" ]]; then
+      echo "  ⚠️  Skip $agent_name/AGENTS.md — exists and is not a symlink"
+      continue
+    fi
+
+    ln -s "$GLOBAL_AGENTS" "$target"
+    echo "  ✅ $agent_name/AGENTS.md → global-agents.md"
+    ((installed++))
+  done
+  echo ""
+fi
+
+# ── Symlink extension folders ──
+
 extensions=()
 for dir in "$SCRIPT_DIR"/*/; do
   if [[ -f "${dir}index.ts" ]]; then
@@ -25,39 +52,32 @@ done
 
 if [[ ${#extensions[@]} -eq 0 ]]; then
   echo "No extensions found (looking for */index.ts)"
-  exit 0
-fi
+else
+  echo "Extensions: ${extensions[*]}"
+  for agent_dir in "$PI_DIR"/*/; do
+    [[ -d "$agent_dir" ]] || continue
+    agent_name="$(basename "$agent_dir")"
 
-echo "Found extensions: ${extensions[*]}"
-echo ""
+    ext_dir="${agent_dir}extensions"
+    mkdir -p "$ext_dir"
 
-# Find all agent config directories in ~/.pi/
-installed=0
-for agent_dir in "$PI_DIR"/*/; do
-  [[ -d "$agent_dir" ]] || continue
-  agent_name="$(basename "$agent_dir")"
+    for ext in "${extensions[@]}"; do
+      source_dir="$SCRIPT_DIR/$ext"
+      target="$ext_dir/$ext"
 
-  # Create extensions directory if needed
-  ext_dir="${agent_dir}extensions"
-  mkdir -p "$ext_dir"
+      if [[ -L "$target" ]]; then
+        rm "$target"
+      elif [[ -e "$target" ]]; then
+        echo "  ⚠️  Skip $agent_name/$ext — exists and is not a symlink"
+        continue
+      fi
 
-  for ext in "${extensions[@]}"; do
-    source_dir="$SCRIPT_DIR/$ext"
-    target="$ext_dir/$ext"
-
-    # Remove existing symlink or warn about non-symlink conflicts
-    if [[ -L "$target" ]]; then
-      rm "$target"
-    elif [[ -e "$target" ]]; then
-      echo "  ⚠️  Skip $agent_name/$ext — target exists and is not a symlink"
-      continue
-    fi
-
-    ln -s "$source_dir" "$target"
-    echo "  ✅ $agent_name/extensions/$ext → $source_dir"
-    ((installed++))
+      ln -s "$source_dir" "$target"
+      echo "  ✅ $agent_name/extensions/$ext → $ext"
+      ((installed++))
+    done
   done
-done
+fi
 
 echo ""
 echo "Installed $installed symlink(s). Run /reload in pi to pick up changes."
