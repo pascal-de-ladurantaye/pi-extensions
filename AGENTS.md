@@ -36,3 +36,4 @@ extensions/
 ## Existing Extensions
 
 - **bash-guard** — Adversarial security review for bash commands using parallel LLM voters
+- **hashline** — Content-anchored line editing — overrides read/grep/edit with `LINE:HASH` references

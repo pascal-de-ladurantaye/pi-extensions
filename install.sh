@@ -7,7 +7,7 @@
 #
 # Options:
 #   --with-agents  Also install global AGENTS.md into each agent profile
-#                  (renders global-agents.md template with this repo's path)
+#                  (renders AGENTS.global.md template with this repo's path)
 #
 set -euo pipefail
 
@@ -32,7 +32,7 @@ installed=0
 # ── Optionally render and install global AGENTS.md ──
 
 if [[ "$INSTALL_AGENTS" == true ]]; then
-  GLOBAL_AGENTS_TEMPLATE="$SCRIPT_DIR/global-agents.md"
+  GLOBAL_AGENTS_TEMPLATE="$SCRIPT_DIR/AGENTS.global.md"
   if [[ -f "$GLOBAL_AGENTS_TEMPLATE" ]]; then
     echo "Global AGENTS.md template: $GLOBAL_AGENTS_TEMPLATE"
     RENDERED=$(sed "s|{{REPO_DIR}}|$SCRIPT_DIR|g" "$GLOBAL_AGENTS_TEMPLATE")
