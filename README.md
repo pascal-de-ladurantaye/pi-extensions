@@ -7,6 +7,9 @@ Custom extensions for [pi](https://github.com/badlogic/pi-mono), the coding agen
 | Extension | Description |
 |---|---|
 | [bash-guard](./extensions/bash-guard/) | Adversarial security review for bash commands — parallel LLM voters assess safety before execution |
+| [hashline](./extensions/hashline/) | Content-anchored line editing — overrides read/grep/edit with `LINE:HASH` references for precise, drift-resistant edits |
+
+The hashline approach originates from [oh-my-pi](https://github.com/can1357/oh-my-pi) by [can1357](https://github.com/can1357).
 
 ## Install
 
@@ -29,7 +32,7 @@ Then run `/reload` in pi to pick up the changes.
 Remove the symlinks from your pi config directories:
 
 ```bash
-rm ~/.pi/*/extensions/bash-guard
+rm ~/.pi/*/extensions/{bash-guard,hashline}
 ```
 
 ## Structure
@@ -46,6 +49,9 @@ pi-extensions/
     ├── bash-guard/
     │   ├── index.ts        # Extension entry point
     │   └── README.md       # Extension documentation
+    ├── hashline/
+    │   ├── index.ts
+    │   └── README.md
     └── your-extension/
         ├── index.ts
         └── README.md
