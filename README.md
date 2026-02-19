@@ -14,9 +14,13 @@ Custom extensions for [pi](https://github.com/badlogic/pi-mono), the coding agen
 ./install.sh
 ```
 
-This symlinks into all pi agent config directories found in `~/.pi/`:
-- **Extensions** — each `*/index.ts` folder → `~/.pi/*/extensions/`
-- **Global AGENTS.md** — `global-agents.md` → `~/.pi/*/AGENTS.md`
+This symlinks each extension folder into all pi agent config directories found in `~/.pi/`.
+
+To also install a global `AGENTS.md` that tells pi where to develop extensions:
+
+```bash
+./install.sh --with-agents
+```
 
 Then run `/reload` in pi to pick up the changes.
 

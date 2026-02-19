@@ -1,14 +1,26 @@
 #!/usr/bin/env bash
 #
-# Install pi extensions and global AGENTS.md by symlinking into
-# all pi agent config directories found in ~/.pi/
+# Install pi extensions by symlinking into all pi agent config
+# directories found in ~/.pi/
 #
-# Usage: ./install.sh
+# Usage: ./install.sh [--with-agents]
+#
+# Options:
+#   --with-agents  Also install global AGENTS.md into each agent profile
+#                  (renders global-agents.md template with this repo's path)
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PI_DIR="$HOME/.pi"
+INSTALL_AGENTS=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --with-agents) INSTALL_AGENTS=true ;;
+    *) echo "Unknown option: $arg"; echo "Usage: ./install.sh [--with-agents]"; exit 1 ;;
+  esac
+done
 
 if [[ ! -d "$PI_DIR" ]]; then
   echo "Error: $PI_DIR does not exist"
@@ -17,27 +29,32 @@ fi
 
 installed=0
 
-# ── Render and install global AGENTS.md into each agent profile ──
+# ── Optionally render and install global AGENTS.md ──
 
-GLOBAL_AGENTS_TEMPLATE="$SCRIPT_DIR/global-agents.md"
-if [[ -f "$GLOBAL_AGENTS_TEMPLATE" ]]; then
-  echo "Global AGENTS.md template: $GLOBAL_AGENTS_TEMPLATE"
-  RENDERED=$(sed "s|{{REPO_DIR}}|$SCRIPT_DIR|g" "$GLOBAL_AGENTS_TEMPLATE")
+if [[ "$INSTALL_AGENTS" == true ]]; then
+  GLOBAL_AGENTS_TEMPLATE="$SCRIPT_DIR/global-agents.md"
+  if [[ -f "$GLOBAL_AGENTS_TEMPLATE" ]]; then
+    echo "Global AGENTS.md template: $GLOBAL_AGENTS_TEMPLATE"
+    RENDERED=$(sed "s|{{REPO_DIR}}|$SCRIPT_DIR|g" "$GLOBAL_AGENTS_TEMPLATE")
 
-  for agent_dir in "$PI_DIR"/*/; do
-    [[ -d "$agent_dir" ]] || continue
-    agent_name="$(basename "$agent_dir")"
-    target="${agent_dir}AGENTS.md"
+    for agent_dir in "$PI_DIR"/*/; do
+      [[ -d "$agent_dir" ]] || continue
+      agent_name="$(basename "$agent_dir")"
+      target="${agent_dir}AGENTS.md"
 
-    # Remove old symlinks from previous install versions
-    if [[ -L "$target" ]]; then
-      rm "$target"
-    fi
+      # Remove old symlinks from previous install versions
+      if [[ -L "$target" ]]; then
+        rm "$target"
+      fi
 
-    echo "$RENDERED" > "$target"
-    echo "  ✅ $agent_name/AGENTS.md (rendered from template)"
-    ((installed++))
-  done
+      echo "$RENDERED" > "$target"
+      echo "  ✅ $agent_name/AGENTS.md (rendered from template)"
+      ((installed++))
+    done
+    echo ""
+  fi
+else
+  echo "Skipping AGENTS.md (use --with-agents to install)"
   echo ""
 fi
 
