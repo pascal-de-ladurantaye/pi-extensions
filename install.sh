@@ -43,15 +43,18 @@ fi
 
 # ── Symlink extension folders ──
 
+EXT_SRC="$SCRIPT_DIR/extensions"
 extensions=()
-for dir in "$SCRIPT_DIR"/*/; do
-  if [[ -f "${dir}index.ts" ]]; then
-    extensions+=("$(basename "$dir")")
-  fi
-done
+if [[ -d "$EXT_SRC" ]]; then
+  for dir in "$EXT_SRC"/*/; do
+    if [[ -f "${dir}index.ts" ]]; then
+      extensions+=("$(basename "$dir")")
+    fi
+  done
+fi
 
 if [[ ${#extensions[@]} -eq 0 ]]; then
-  echo "No extensions found (looking for */index.ts)"
+  echo "No extensions found (looking for extensions/*/index.ts)"
 else
   echo "Extensions: ${extensions[*]}"
   for agent_dir in "$PI_DIR"/*/; do
@@ -62,7 +65,7 @@ else
     mkdir -p "$ext_dir"
 
     for ext in "${extensions[@]}"; do
-      source_dir="$SCRIPT_DIR/$ext"
+      source_dir="$EXT_SRC/$ext"
       target="$ext_dir/$ext"
 
       if [[ -L "$target" ]]; then

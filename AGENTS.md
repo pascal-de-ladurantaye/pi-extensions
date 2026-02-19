@@ -4,12 +4,13 @@ This repository contains custom extensions for pi, the coding agent.
 
 ## Structure
 
-Each extension is a directory with an `index.ts` entry point and a `README.md`:
+Extensions live in the `extensions/` directory. Each is a folder with `index.ts` + `README.md`:
 
 ```
-extension-name/
-├── index.ts    # Entry point — exports default function(pi: ExtensionAPI)
-└── README.md   # Documentation
+extensions/
+└── extension-name/
+    ├── index.ts    # Entry point — exports default function(pi: ExtensionAPI)
+    └── README.md   # Documentation
 ```
 
 ## Development Guidelines

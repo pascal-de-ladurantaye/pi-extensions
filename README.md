@@ -6,7 +6,7 @@ Custom extensions for [pi](https://github.com/badlogic/pi-mono), the coding agen
 
 | Extension | Description |
 |---|---|
-| [bash-guard](./bash-guard/) | Adversarial security review for bash commands — parallel LLM voters assess safety before execution |
+| [bash-guard](./extensions/bash-guard/) | Adversarial security review for bash commands — parallel LLM voters assess safety before execution |
 
 ## Install
 
@@ -38,17 +38,18 @@ pi-extensions/
 ├── README.md
 ├── AGENTS.md               # Repo-local context (for working in this repo)
 ├── global-agents.md        # Global context (symlinked to ~/.pi/*/AGENTS.md)
-├── bash-guard/
-│   ├── index.ts            # Extension entry point
-│   └── README.md           # Extension documentation
-└── your-extension/
-    ├── index.ts
-    └── README.md
+└── extensions/
+    ├── bash-guard/
+    │   ├── index.ts        # Extension entry point
+    │   └── README.md       # Extension documentation
+    └── your-extension/
+        ├── index.ts
+        └── README.md
 ```
 
 ## Adding a new extension
 
-1. Create a folder with an `index.ts` that exports a default function:
+1. Create a folder under `extensions/` with an `index.ts` that exports a default function:
    ```typescript
    import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
    
