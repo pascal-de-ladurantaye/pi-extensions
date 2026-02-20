@@ -71,6 +71,10 @@ src/main.ts:  6:a1|  const y = x + 1;
 
 Falls back to `oldText`/`newText` style edits when the model doesn't use the `edits[]` array format.
 
+## Dependencies
+
+- [`diff`](https://github.com/kpdecker/jsdiff) — Myers diff algorithm for accurate, minimal edit diffs
+
 ## Environment Variables
 
 - `PI_HASHLINE_DEBUG=1` — Show notification on session start

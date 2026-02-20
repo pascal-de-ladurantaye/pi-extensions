@@ -1,0 +1,9 @@
+{
+  "name": "hashline",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "diff": "^8.0.0"
+  }
+}

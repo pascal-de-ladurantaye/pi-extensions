@@ -32,6 +32,7 @@ import { constants } from "fs";
 import { isAbsolute, resolve as resolvePath } from "path";
 import path from "path";
 import * as os from "os";
+import { diffLines as libDiffLines } from "diff";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Utility helpers
@@ -266,7 +267,7 @@ function replaceText(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Diff generation (inline — avoids external `diff` dependency)
+// Diff generation (using `diff` npm package for proper Myers diff)
 // ═══════════════════════════════════════════════════════════════════════════
 
 function generateDiffString(
@@ -274,148 +275,77 @@ function generateDiffString(
 	newContent: string,
 	contextLines = 4,
 ): { diff: string; firstChangedLine: number | undefined } {
-	const oldLines = oldContent.split("\n");
-	const newLines = newContent.split("\n");
-	const maxLen = Math.max(oldLines.length, newLines.length);
+	const changes = libDiffLines(oldContent, newContent);
+	const maxLen = Math.max(
+		oldContent.split("\n").length,
+		newContent.split("\n").length,
+	);
 	const lineNumWidth = String(maxLen).length;
+	// Expand change objects into per-line entries with line numbers
+	interface DiffEntry {
+		type: "same" | "add" | "remove";
+		text: string;
+		oldLineNum: number;
+		newLineNum: number;
+	}
 
-	// Simple LCS-based diff
-	const changes = diffLines(oldLines, newLines);
-	const output: string[] = [];
-	let firstChangedLine: number | undefined;
-	let lastChangeIdx = -contextLines - 1;
+	const entries: DiffEntry[] = [];
+	let oldLine = 1;
+	let newLine = 1;
 
-	// Determine which output indices are within context of a change
-	const isChange = changes.map((c) => c.type !== "same");
-	const inContext = new Array(changes.length).fill(false);
-	for (let i = 0; i < changes.length; i++) {
+	for (const change of changes) {
+		const lines = change.value.replace(/\n$/, "").split("\n");
+		for (const text of lines) {
+			if (change.removed) {
+				entries.push({ type: "remove", text, oldLineNum: oldLine, newLineNum: newLine });
+				oldLine++;
+			} else if (change.added) {
+				entries.push({ type: "add", text, oldLineNum: oldLine, newLineNum: newLine });
+				newLine++;
+			} else {
+				entries.push({ type: "same", text, oldLineNum: oldLine, newLineNum: newLine });
+				oldLine++;
+				newLine++;
+			}
+		}
+	}
+
+	// Determine which entries are within context of a change
+	const isChange = entries.map((e) => e.type !== "same");
+	const inContext = new Array(entries.length).fill(false);
+	for (let i = 0; i < entries.length; i++) {
 		if (isChange[i]) {
 			for (
 				let j = Math.max(0, i - contextLines);
-				j <= Math.min(changes.length - 1, i + contextLines);
+				j <= Math.min(entries.length - 1, i + contextLines);
 				j++
 			) {
 				inContext[j] = true;
 			}
 		}
 	}
-
+	const output: string[] = [];
+	let firstChangedLine: number | undefined;
 	let prevShown = false;
-	for (let i = 0; i < changes.length; i++) {
-		const c = changes[i];
+	for (let i = 0; i < entries.length; i++) {
+		const e = entries[i];
 		if (!inContext[i]) {
 			prevShown = false;
 			continue;
 		}
-
 		if (!prevShown && i > 0) output.push(` ${"".padStart(lineNumWidth, " ")} ...`);
 		prevShown = true;
-
-		if (c.type === "remove") {
-			if (firstChangedLine === undefined) firstChangedLine = c.newLineNum;
-			output.push(
-				`-${String(c.oldLineNum).padStart(lineNumWidth, " ")} ${c.text}`,
-			);
-		} else if (c.type === "add") {
-			if (firstChangedLine === undefined) firstChangedLine = c.newLineNum;
-			output.push(
-				`+${String(c.newLineNum).padStart(lineNumWidth, " ")} ${c.text}`,
-			);
+		if (e.type === "remove") {
+			if (firstChangedLine === undefined) firstChangedLine = e.newLineNum;
+			output.push(`-${String(e.oldLineNum).padStart(lineNumWidth, " ")} ${e.text}`);
+		} else if (e.type === "add") {
+			if (firstChangedLine === undefined) firstChangedLine = e.newLineNum;
+			output.push(`+${String(e.newLineNum).padStart(lineNumWidth, " ")} ${e.text}`);
 		} else {
-			output.push(
-				` ${String(c.oldLineNum).padStart(lineNumWidth, " ")} ${c.text}`,
-			);
+			output.push(` ${String(e.oldLineNum).padStart(lineNumWidth, " ")} ${e.text}`);
 		}
 	}
-
 	return { diff: output.join("\n"), firstChangedLine };
-}
-
-interface DiffEntry {
-	type: "same" | "add" | "remove";
-	text: string;
-	oldLineNum: number;
-	newLineNum: number;
-}
-
-/** Simple line diff using a greedy longest-common-subsequence approach. */
-function diffLines(oldLines: string[], newLines: string[]): DiffEntry[] {
-	// Use patience-style: match unique lines first, then fill gaps
-	// For simplicity, use basic Myers-like O(ND) diff for short files,
-	// fall back to hash-based for large files
-
-	const result: DiffEntry[] = [];
-	let oi = 0;
-	let ni = 0;
-
-	// Build lookup of old line positions
-	const oldMap = new Map<string, number[]>();
-	for (let i = 0; i < oldLines.length; i++) {
-		const arr = oldMap.get(oldLines[i]);
-		if (arr) arr.push(i);
-		else oldMap.set(oldLines[i], [i]);
-	}
-
-	// Simple forward scan with lookahead
-	while (oi < oldLines.length || ni < newLines.length) {
-		if (oi < oldLines.length && ni < newLines.length && oldLines[oi] === newLines[ni]) {
-			result.push({
-				type: "same",
-				text: oldLines[oi],
-				oldLineNum: oi + 1,
-				newLineNum: ni + 1,
-			});
-			oi++;
-			ni++;
-			continue;
-		}
-
-		// Look ahead for resync
-		let bestOld = -1;
-		let bestNew = -1;
-		let bestCost = Infinity;
-		const maxLook = Math.min(50, Math.max(oldLines.length - oi, newLines.length - ni));
-
-		for (let look = 1; look <= maxLook; look++) {
-			// Skip `look` old lines
-			if (oi + look < oldLines.length && ni < newLines.length && oldLines[oi + look] === newLines[ni]) {
-				const cost = look;
-				if (cost < bestCost) { bestOld = oi + look; bestNew = ni; bestCost = cost; }
-				break;
-			}
-			// Skip `look` new lines
-			if (ni + look < newLines.length && oi < oldLines.length && oldLines[oi] === newLines[ni + look]) {
-				const cost = look;
-				if (cost < bestCost) { bestOld = oi; bestNew = ni + look; bestCost = cost; }
-				break;
-			}
-		}
-
-		if (bestOld === -1 && bestNew === -1) {
-			// No resync found — emit remaining as removes then adds
-			while (oi < oldLines.length) {
-				result.push({ type: "remove", text: oldLines[oi], oldLineNum: oi + 1, newLineNum: ni + 1 });
-				oi++;
-			}
-			while (ni < newLines.length) {
-				result.push({ type: "add", text: newLines[ni], oldLineNum: oi + 1, newLineNum: ni + 1 });
-				ni++;
-			}
-		} else {
-			// Emit removals up to bestOld
-			while (oi < bestOld) {
-				result.push({ type: "remove", text: oldLines[oi], oldLineNum: oi + 1, newLineNum: ni + 1 });
-				oi++;
-			}
-			// Emit additions up to bestNew
-			while (ni < bestNew) {
-				result.push({ type: "add", text: newLines[ni], oldLineNum: oi + 1, newLineNum: ni + 1 });
-				ni++;
-			}
-		}
-	}
-
-	return result;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
