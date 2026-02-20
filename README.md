@@ -8,6 +8,7 @@ Customizations for [pi](https://github.com/badlogic/pi-mono), the coding agent.
 |---|---|
 | [bash-guard](./extensions/bash-guard/) | Adversarial security review for bash commands — parallel LLM voters assess safety before execution |
 | [hashline](./extensions/hashline/) | Content-anchored line editing — overrides read/grep/edit with `LINE:HASH` references for precise, drift-resistant edits |
+| [snapshot](./extensions/snapshot/) | Shadow-git filesystem checkpoints at each turn; offers file restore on `/fork` |
 
 The hashline approach originates from [oh-my-pi](https://github.com/can1357/oh-my-pi) by [can1357](https://github.com/can1357).
 
@@ -32,30 +33,9 @@ Then run `/reload` in pi to pick up the changes.
 Remove the symlinks from your pi config directories:
 
 ```bash
-rm ~/.pi/*/extensions/{bash-guard,hashline}
+rm ~/.pi/*/extensions/{bash-guard,hashline,snapshot}
 ```
 
-## Structure
-
-Each extension is a directory with an `index.ts` entry point:
-
-```
-pi-extensions/
-├── install.sh              # Symlink installer
-├── README.md
-├── AGENTS.md               # Repo-local context (for working in this repo)
-├── global-agents.md        # Global context (symlinked to ~/.pi/*/AGENTS.md)
-└── extensions/
-    ├── bash-guard/
-    │   ├── index.ts        # Extension entry point
-    │   └── README.md       # Extension documentation
-    ├── hashline/
-    │   ├── index.ts
-    │   └── README.md
-    └── your-extension/
-        ├── index.ts
-        └── README.md
-```
 
 ## Adding a new extension
 
