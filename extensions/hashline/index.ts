@@ -631,9 +631,11 @@ function stripRangeBoundaryEcho(
 
 function parseHashlineEditItem(edit: HashlineEditItem): ParsedEdit {
 	if ("set_line" in edit) {
+		let raw = edit.set_line.new_text;
+		if (raw.endsWith("\n")) raw = raw.slice(0, -1);
 		return {
 			spec: { kind: "single", ref: parseLineRef(edit.set_line.anchor) },
-			dstLines: stripNewLinePrefixes(splitDst(edit.set_line.new_text)),
+			dstLines: stripNewLinePrefixes(splitDst(raw)),
 		};
 	}
 	if ("replace_lines" in edit) {
