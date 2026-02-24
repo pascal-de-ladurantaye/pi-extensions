@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Resolve symlinks so this works when symlinked from ~/.pi/*/skills/
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ "$SOURCE" != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+
+exec node "$SCRIPT_DIR/client.mjs" "$@"

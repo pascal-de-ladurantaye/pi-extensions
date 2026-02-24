@@ -10,6 +10,12 @@ Customizations for [pi](https://github.com/badlogic/pi-mono), the coding agent.
 | [hashline](./extensions/hashline/) | Content-anchored line editing — overrides read/grep/edit with `LINE:HASH` references for precise, drift-resistant edits |
 | [snapshot](./extensions/snapshot/) | Shadow-git filesystem checkpoints at each turn; offers file restore on `/fork` |
 
+## Skills
+
+| Skill | Description |
+|---|---|
+| [browser-mcp](./skills/browser-mcp/) | Automates the user's real Chrome browser via the Browser MCP Chrome extension — CLI wrapper + daemon that bridges commands to the extension over WebSocket |
+
 The hashline approach originates from [oh-my-pi](https://github.com/can1357/oh-my-pi) by [can1357](https://github.com/can1357).
 
 ## Install
