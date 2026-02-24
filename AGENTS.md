@@ -55,6 +55,7 @@ When building or modifying any of the above, always read the corresponding pi do
 
 ### General
 
+- **All extension/theme/skill/prompt development happens in this repo**, never directly in `~/.pi/*/`. The `~/.pi/*/` directories contain symlinks created by `./install.sh`.
 - After making changes, run `./install.sh` to symlink into all `~/.pi/*/` profiles
 - Test extensions and themes with `/reload` for hot-reload without restarting pi
 
@@ -103,6 +104,18 @@ When building or modifying any of the above, always read the corresponding pi do
 - **bash-guard** — Adversarial security review for bash commands using parallel LLM voters
 - **hashline** — Content-anchored line editing — overrides read/grep/edit with `LINE:HASH` references
 - **snapshot** — Shadow-git filesystem checkpoints at each turn; offers file restore on `/fork`
+
+## Session Log Analysis
+
+Pi session logs are stored in `~/.pi/{profile}/sessions/` as `.jsonl` files. Each line is a JSON object. Key structure:
+- `type: "session"` — session metadata (first line)
+- `type: "message"` with `message.role` — conversation messages
+  - Messages use `message.content[]` with parts of `type: "text"`, `type: "toolCall"`, etc.
+  - Tool calls are in `content[]` with `type: "toolCall"`, fields: `name`, `arguments` (not `input` or `args`)
+  - Tool results have `role: "toolResult"` with `toolName`, `toolCallId`, `content`
+- `type: "custom"` — extension events (snapshots, etc.)
+
+When analyzing session logs, use `message.content[]` to find tool calls and their arguments.
 
 ## Existing Themes
 

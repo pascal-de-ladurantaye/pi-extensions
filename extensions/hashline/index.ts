@@ -568,9 +568,12 @@ function restoreOldWrappedLines(
 			len <= 10 && start + len <= newLines.length;
 			len++
 		) {
-			const canonSpan = stripAllWhitespace(
-				newLines.slice(start, start + len).join(""),
-			);
+			// Skip spans containing blank/whitespace-only lines — a blank line
+			// contributes nothing to the canonical form, which causes false
+			// positives (e.g. [blank, "if (!x) {"] matching old "if (!x) {").
+			const span = newLines.slice(start, start + len);
+			if (span.some((l) => l.trim().length === 0)) continue;
+			const canonSpan = stripAllWhitespace(span.join(""));
 			const old = canonToOld.get(canonSpan);
 			if (old && old.count === 1 && canonSpan.length >= 6) {
 				candidates.push({
@@ -592,9 +595,20 @@ function restoreOldWrappedLines(
 	);
 	if (uniqueCandidates.length === 0) return newLines;
 
-	uniqueCandidates.sort((a, b) => b.start - a.start);
-	const out = [...newLines];
+	// Remove overlapping candidates — overlapping bottom-up splices corrupt
+	// content because later splices operate on indices shifted by earlier ones.
+	uniqueCandidates.sort((a, b) => a.start - b.start);
+	const nonOverlapping: typeof uniqueCandidates = [];
 	for (const c of uniqueCandidates) {
+		const prev = nonOverlapping[nonOverlapping.length - 1];
+		if (prev && c.start < prev.start + prev.len) continue; // overlaps
+		nonOverlapping.push(c);
+	}
+	if (nonOverlapping.length === 0) return newLines;
+
+	nonOverlapping.sort((a, b) => b.start - a.start);
+	const out = [...newLines];
+	for (const c of nonOverlapping) {
 		out.splice(c.start, c.len, c.replacement);
 	}
 	return out;
@@ -1088,7 +1102,10 @@ const EDIT_DESC = `Surgically edit files with hash-verified line references (anc
 Rules:
 - Anchors (\`LINE:HASH\`) must be copied exactly from \`read\` output.
 - \`new_text\` is plain content (no hashes, no diff \`+\` markers). Do not add a trailing newline.
+- Trailing newlines in \`new_text\` are stripped for \`set_line\` and \`replace_lines\`. To add a blank line, use \`insert_after\` with empty text.
 - \`replace_lines\` replaces the ENTIRE range [start, end] inclusive. Any line in the range not reproduced in \`new_text\` is deleted. To add lines without removing existing ones, prefer \`insert_after\`.
+- Prefer small, targeted ranges in \`replace_lines\`. Avoid spanning the entire file — use multiple focused edits instead.
+- To delete a line, use \`set_line\` with empty \`new_text\` (\`""\`).
 - If a hash mismatch occurs (indicated by \`>>>\`), re-read the file to sync.
 - Operations are validated and applied bottom-up atomically.`;
 
