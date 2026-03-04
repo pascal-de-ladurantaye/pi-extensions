@@ -105,7 +105,7 @@ When building or modifying any of the above, always read the corresponding pi do
 - **cross-agent-discovery** — Discovers project-local Claude slash commands (`.claude/commands/*.md`) and registers them as pi prompt templates
 - **hashline** — Content-anchored line editing — overrides read/grep/edit with `LINE:HASH` references
 - **session-memory** — Converts session JSONL to Obsidian-friendly markdown vault with callouts, indexes, canvas, and MOC
-- **session-namer** — Auto-names sessions using Claude Haiku on the first 3 turns; `/session-namer name` to force rename
+- **session-namer** — Auto-names sessions using Claude Haiku on the first 3 turns; `/session-namer name` to force rename, `/session-namer retitle-all` to backfill all unnamed sessions
 - **snapshot** — Shadow-git filesystem checkpoints at each turn; offers file restore on `/fork`
 
 ## Session Log Analysis

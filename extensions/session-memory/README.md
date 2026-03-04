@@ -60,7 +60,7 @@ content_hash: abc123def456
 
 ## Idempotency
 
-Content is hashed per segment. Re-running (or backfill) skips files whose content hasn't changed. Index and canvas use `writeIfChanged`. MOC only regenerates when a new session folder is created.
+Content is hashed per segment. Re-running (or backfill) skips files whose content hasn't changed. Index and canvas use `writeIfChanged`. MOC regenerates on backfill unconditionally, and on live flush when new sessions appear or segments are written (e.g., session name changes).
 
 ## Hooks
 
