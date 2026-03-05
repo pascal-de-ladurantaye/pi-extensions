@@ -103,6 +103,7 @@ When building or modifying any of the above, always read the corresponding pi do
 
 - **bash-guard** — Adversarial security review for bash commands using parallel LLM voters
 - **cross-agent-discovery** — Discovers project-local Claude slash commands (`.claude/commands/*.md`) and registers them as pi prompt templates
+- **dynamic-context** — Injects shell command output into prompts at expansion time using `!\`command\`` syntax; caches results, persists across forks, shows a diff notification
 - **hashline** — Content-anchored line editing — overrides read/grep/edit with `LINE:HASH` references
 - **session-memory** — Converts session JSONL to Obsidian-friendly markdown vault with callouts, indexes, canvas, and MOC
 - **session-namer** — Auto-names sessions using Claude Haiku on the first 3 turns; `/session-namer name` to force rename, `/session-namer retitle-all` to backfill all unnamed sessions
